@@ -26,14 +26,14 @@ public class MapperTest {
         System.out.println(user2);
     }
 
-    @Test
-    public void testInsertUser(){
-        User user = new User("test","123456","abc","qq.com",1,1, "url","http",new Date());
-        int row = userMapper.insertUser(user);
-        System.out.println(row);
-        System.out.println(user.getId());
-
-    }
+//    @Test
+//    public void testInsertUser(){
+//        User user = new User("test","123456","abc","qq.com",1,1, "url","http",new Date());
+//        int row = userMapper.insertUser(user);
+//        System.out.println(row);
+//        System.out.println(user.getId());
+//
+//    }
 
     @Test
     public void testupdateUser(){
