@@ -1,6 +1,8 @@
 package com.nowcoder.community.service;
 
+import com.nowcoder.community.dao.LoginTicketMapper;
 import com.nowcoder.community.dao.UserMapper;
+import com.nowcoder.community.entity.LoginTicket;
 import com.nowcoder.community.entity.User;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
@@ -12,10 +14,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class UserService implements CommunityConstant {
@@ -24,6 +23,9 @@ public class UserService implements CommunityConstant {
 
     @Autowired
     private TemplateEngine templateEngine;
+
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
 
     @Autowired
     private MailClient mailClient;
@@ -113,5 +115,52 @@ public class UserService implements CommunityConstant {
             return ACTIVATION_SUCCESS;
         }
         else {return ACTIVATION_FAILED;}
+        }
+
+
+        //登录
+        public Map<String,Object> login(String username,String password,int expiredSecond){
+            Map<String ,Object> map = new HashMap<>();
+            //空值处理
+            if(StringUtils.isBlank(username)){
+                map.put("usernameMsg","Account cant be null!");
+                return map;
+            } else if (StringUtils.isBlank(username)) {
+                map.put("passwordMsg","Password cant be null!");
+                return map;
+            }
+            //验证账号状态
+            User user = userMapper.selectByName(username);
+            if(user==null){
+                map.put("usernameMsg","Account is not exist!");
+                return map;
+            }
+            if(user.getStatus()==0){
+                map.put("usernameMsg","Account is not activated!");
+                return map;
+            }
+
+            //验证密码
+            if(!CommunityUtil.md5(user.getPassword()+user.getSalt()).equals(CommunityUtil.md5(password+user.getSalt()))){
+                map.put("passwordMsg","Password incorrect!");
+                return map;
+            };
+
+
+            //生成登录凭证
+            LoginTicket loginTicket = new LoginTicket();
+            loginTicket.setUserId(user.getId());
+            loginTicket.setTicket(CommunityUtil.generateUUID());
+            loginTicket.setStatus(0);
+            loginTicket.setExpired(new Date(System.currentTimeMillis()+1000*expiredSecond));
+            loginTicketMapper.insertLoginTicket(loginTicket);
+            map.put("ticket",loginTicket.getTicket());
+            return map;
+
+        }
+
+        //退出登录
+        public void logout(String ticket){
+            loginTicketMapper.updateStatus(ticket,1);
         }
 }
