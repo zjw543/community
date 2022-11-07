@@ -104,9 +104,9 @@ public class UserService implements CommunityConstant {
         String content = templateEngine.process("/mail/activation",context);
         mailClient.sendMail(user.getEmail(),"Account activation",content);
         return map;
-        }
+    }
 
-        public int activation(int id,String code){
+    public int activation(int id,String code){
         User user = userMapper.selectById(id);
         if(user.getStatus()==1){
             return ACTIVATION_REPEAT;
@@ -141,7 +141,7 @@ public class UserService implements CommunityConstant {
             }
 
             //验证密码
-            if(!CommunityUtil.md5(user.getPassword()+user.getSalt()).equals(CommunityUtil.md5(password+user.getSalt()))){
+            if(!CommunityUtil.md5(user.getPassword()).equals(CommunityUtil.md5(password+user.getSalt()))){
                 map.put("passwordMsg","Password incorrect!");
                 return map;
             };
@@ -162,5 +162,39 @@ public class UserService implements CommunityConstant {
         //退出登录
         public void logout(String ticket){
             loginTicketMapper.updateStatus(ticket,1);
+        }
+
+        //查询登录凭证
+        public LoginTicket findLoginTicket(String ticket){
+            return loginTicketMapper.selectByTicket(ticket);
+        }
+
+        //更新头像链接
+        public void updateHeader(int id,String url){
+            userMapper.updateHeader(id,url);
+        }
+
+        //修改密码
+        public Map<String,Object> updatePassword(int id,String oldPassword,String newPassword){
+            Map<String,Object> map = new HashMap<>();
+            //判断旧密码是否正确
+            User user = userMapper.selectById(id);
+            if (!(user.getPassword().equals(CommunityUtil.md5(oldPassword+user.getSalt())))){
+                //旧密码错误
+                map.put("passwordMsg","密码错误！");
+                return map;
+            }
+            //判断密码是否合规
+            if(StringUtils.isBlank(newPassword)){
+                map.put("newPasswordMsg","密码不能为空！");
+                return map;
+            }
+            if (StringUtils.length(newPassword)<8){
+                map.put("newPasswordMsg","密码至少为8位！");
+                return map;
+            }
+            userMapper.updatePassword(id,CommunityUtil.md5(newPassword+user.getSalt()));
+            //修改成功map为空
+            return map;
         }
 }

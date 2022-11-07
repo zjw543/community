@@ -6,6 +6,7 @@ import com.nowcoder.community.dao.UserMapper;
 import com.nowcoder.community.entity.DiscussPost;
 import com.nowcoder.community.entity.LoginTicket;
 import com.nowcoder.community.entity.User;
+import com.nowcoder.community.util.CommunityUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,6 +67,12 @@ public class MapperTest {
         loginTicket1.setExpired(new Date(System.currentTimeMillis()+1000*60*10));
         loginTicketMapper.insertLoginTicket(loginTicket1);
         loginTicketMapper.updateStatus(loginTicket1.getTicket(),1);
+    }
+
+    @Test
+    public void pass(){
+        System.out.println( CommunityUtil.md5("12345678007d4"));
+
     }
 
 }
