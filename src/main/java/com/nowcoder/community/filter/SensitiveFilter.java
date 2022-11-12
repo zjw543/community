@@ -88,7 +88,7 @@ public class SensitiveFilter {
                 position++;
             }
         }
-        // 将最后一批支付计入结果
+        // 将最后一批字符计入结果
         sb.append(text.substring(begin));
         return sb.toString();
     }
@@ -121,8 +121,12 @@ public class SensitiveFilter {
 
     //前缀树
     private class TrieNode{
+
+
         //关键词结束标识
         private boolean isKeywordEnd = false;
+
+
         //子节点（key是下级字符，value是下级节点）
         private Map<Character,TrieNode> subNodes = new HashMap<>();
 

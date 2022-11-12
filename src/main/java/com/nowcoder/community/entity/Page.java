@@ -1,6 +1,5 @@
 package com.nowcoder.community.entity;
 
-import org.springframework.web.bind.annotation.GetMapping;
 
 //封装分页相关的组件
 public class Page {

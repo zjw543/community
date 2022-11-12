@@ -141,7 +141,7 @@ public class UserService implements CommunityConstant {
             }
 
             //验证密码
-            if(!CommunityUtil.md5(user.getPassword()).equals(CommunityUtil.md5(password+user.getSalt()))){
+            if(!(user.getPassword().equals(CommunityUtil.md5(password+user.getSalt())))){
                 map.put("passwordMsg","Password incorrect!");
                 return map;
             };
