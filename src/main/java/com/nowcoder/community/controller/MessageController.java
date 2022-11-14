@@ -30,6 +30,7 @@ public class MessageController {
     @Autowired
     private UserService userService;
 
+    //获得未读私信的id列表
     private List<Integer> getUnreadLetterIds(List<Message> messageList){
         List<Integer> ids = new ArrayList<>();
         if (messageList!=null){
@@ -43,6 +44,7 @@ public class MessageController {
     }
 
 
+    //私信列表
     @RequestMapping(path = "/letter/list",method = RequestMethod.GET)
     public String getLetterList(Page page, Model model){
         User user = hostholder.getUser();
@@ -72,6 +74,7 @@ public class MessageController {
     }
 
 
+    //私信详情
     @RequestMapping(path = "/letter/detail/{conversationId}",method = RequestMethod.GET)
     public String getLetterDetail(@PathVariable("conversationId")String conversationId,Page page,Model model){
         page.setPath("/letter/detail/"+conversationId);
@@ -121,6 +124,7 @@ public class MessageController {
     //发送消息
     @RequestMapping(path = "/letter/send",method = RequestMethod.POST)
     public String sendMessage(String toName,String content){
+
         User targetUser = userService.findUserByName(toName);
         if(targetUser==null){
             return CommunityUtil.getJSONString(1,"目标用户不存在");
