@@ -3,10 +3,14 @@ package com.nowcoder.community.controller;
 
 import com.nowcoder.community.annotation.LoginRequired;
 import com.nowcoder.community.entity.User;
+import com.nowcoder.community.service.FollowService;
+import com.nowcoder.community.service.LikeService;
 import com.nowcoder.community.service.UserService;
+import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.Hostholder;
 import org.apache.commons.lang3.StringUtils;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.multipart.MultipartFile;
+import org.yaml.snakeyaml.events.Event;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -27,7 +32,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/user")
-public class UserController {
+public class UserController implements CommunityConstant {
 
     @Autowired
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -44,7 +49,13 @@ public class UserController {
     private UserService userService;
 
     @Autowired
+    private FollowService followService;
+
+    @Autowired
     private Hostholder hostholder;
+
+    @Autowired
+    private LikeService likeService;
 
     @LoginRequired
     @RequestMapping(path ="/setting",method = RequestMethod.GET)
@@ -120,5 +131,36 @@ public class UserController {
             model.addAttribute("newPasswordMsg",map.get("newPasswordMsg"));
         }
         return "/site/setting";
+    }
+
+    //访问用户首页
+    @RequestMapping(path = "/profile/{userId}",method = RequestMethod.GET)
+    public String getProfilePage(@PathVariable("userId")int userId,Model model){
+        User user = userService.findUserById(userId);
+        if (user==null){
+            throw new RuntimeException("user is not exist");
+        }
+
+        //用户点赞总数
+        model.addAttribute("user",user);
+        int likeCount = likeService.findUserLikeCount(userId);
+        model.addAttribute("likeCount",likeCount);
+        //关注数量
+        long followeeCount = followService.findFolloweeCount(userId,ENTITY_TYPE_USER);
+
+        //粉丝数量
+        long followerCount = followService.fingFollowerCount(ENTITY_TYPE_USER,userId);
+
+        //是否关注当前用户
+        boolean isFollowed = false;
+        if(hostholder!=null){
+            isFollowed = followService.hasFollowed(hostholder.getUser().getId(),ENTITY_TYPE_USER,userId);
+        }
+
+        model.addAttribute("followeeCount",followeeCount);
+        model.addAttribute("followerCount",followerCount);
+        model.addAttribute("hasFollowed",isFollowed);
+
+        return "/site/profile";
     }
 }

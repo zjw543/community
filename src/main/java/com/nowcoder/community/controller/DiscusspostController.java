@@ -7,6 +7,7 @@ import com.nowcoder.community.entity.Page;
 import com.nowcoder.community.entity.User;
 import com.nowcoder.community.service.CommentService;
 import com.nowcoder.community.service.DiscussPostService;
+import com.nowcoder.community.service.LikeService;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
@@ -37,6 +38,9 @@ public class DiscusspostController implements CommunityConstant {
     @Autowired
     private DiscussPostService discussPostService;
 
+    @Autowired
+    private LikeService likeService;
+
     @RequestMapping(path = "/add",method = RequestMethod.POST)
     @ResponseBody
     public String addDiscussPost(String title, String content){
@@ -55,19 +59,28 @@ public class DiscusspostController implements CommunityConstant {
     }
 
     @RequestMapping(path ="/detail/{discussPostId}",method = RequestMethod.GET)
-    public String getDiscussPost(@PathVariable("discussPostId")int id, Model model,Page page){
+    public String getDiscussPost(@PathVariable("discussPostId")int discussPostId, Model model,Page page){
 
         //帖子内容
-        DiscussPost post = discussPostService.findDiscussPostById(id);
+        DiscussPost post = discussPostService.findDiscussPostById(discussPostId);
         model.addAttribute("post",post);
-        User user = userService.findUserById(post.getUserId());
-        model.addAttribute("user",user);
+        User postuser = userService.findUserById(post.getUserId());
+        model.addAttribute("user",postuser);
+        //帖子点赞
+        User user = hostholder.getUser();
+        //点赞数量
+        long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST,discussPostId);
+        //点赞状态
+        int likeStatus = (user==null) ? 0:(likeService.findEntityLikeStatus(user.getId(),ENTITY_TYPE_POST,discussPostId));
+        model.addAttribute("likeStatus",likeStatus);
+        model.addAttribute("likeCount",likeCount);
+
 
         //评论内容
         //Page page = new Page();
         page.setLimit(5);
         page.setRows(post.getCommentCount());
-        page.setPath("/discuss/detail/"+id);
+        page.setPath("/discuss/detail/"+discussPostId);
         List<Comment> commentList = commentService.findCommentsByEntity(
                 ENTITY_TYPE_POST, post.getId(), page.getOffset(), page.getLimit());
         //评论VO列表
@@ -78,6 +91,15 @@ public class DiscusspostController implements CommunityConstant {
                 commentVo.put("comment",comment);
                 commentVo.put("user",userService.findUserById(comment.getUserId()));
 
+                //点赞数量
+                likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT,comment.getId());
+                //点赞状态
+                likeStatus = user== null ? 0:
+                        (likeService.findEntityLikeStatus(user.getId(),ENTITY_TYPE_COMMENT,comment.getId()));
+                commentVo.put("likeCount",likeCount);
+                commentVo.put("likeStatus",likeStatus);
+
+
                 //回复列表
                 List<Comment> replyList = commentService.findCommentsByEntity(
                         ENTITY_TYPE_COMMENT,comment.getId(),0,Integer.MAX_VALUE);
@@ -85,7 +107,17 @@ public class DiscusspostController implements CommunityConstant {
                 ArrayList<Map<String,Object>> replyVoList = new ArrayList<>();
                 if( replyList!= null){
                     for (Comment reply:replyList){
+
                         Map<String, Object> replyVo = new HashMap<>();
+                        //点赞数量
+                        long replyLikeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT,reply.getId());
+                        //点赞状态
+                        int replyLikeStatus = user== null ? 0:
+                                (likeService.findEntityLikeStatus(user.getId(),ENTITY_TYPE_COMMENT,reply.getId()));
+
+                        replyVo.put("likeCount",replyLikeCount);
+                        replyVo.put("likeStatus",replyLikeStatus);
+
                         replyVo.put("reply",reply);
                         replyVo.put("user", userService.findUserById(reply.getUserId()));
                         //回复目标
