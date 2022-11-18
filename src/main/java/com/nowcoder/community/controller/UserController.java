@@ -10,7 +10,6 @@ import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.Hostholder;
 import org.apache.commons.lang3.StringUtils;
-import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.multipart.MultipartFile;
-import org.yaml.snakeyaml.events.Event;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -149,7 +147,7 @@ public class UserController implements CommunityConstant {
         long followeeCount = followService.findFolloweeCount(userId,ENTITY_TYPE_USER);
 
         //粉丝数量
-        long followerCount = followService.fingFollowerCount(ENTITY_TYPE_USER,userId);
+        long followerCount = followService.findFollowerCount(ENTITY_TYPE_USER,userId);
 
         //是否关注当前用户
         boolean isFollowed = false;

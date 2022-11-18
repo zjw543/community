@@ -1,20 +1,24 @@
 package com.nowcoder.community.service;
 
+import com.nowcoder.community.dao.UserMapper;
+import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
+
+import java.util.*;
 
 @Service
-public class FollowService {
+public class FollowService implements CommunityConstant {
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private UserMapper userMapper;
 
 
     //关注
@@ -55,7 +59,7 @@ public class FollowService {
 
 
     //查询某实体的粉丝数量
-    public long fingFollowerCount(int entityType,int entityId){
+    public long findFollowerCount(int entityType, int entityId){
         String followerKey = RedisKeyUtil.getFollowerKey(entityType,entityId);
         return redisTemplate.opsForZSet().zCard(followerKey);
     }
@@ -67,5 +71,38 @@ public class FollowService {
         return redisTemplate.opsForZSet().score(followeeKey,entityId)!=null;
     }
 
+    //查询某用户关注的人
+    public List<Map<String,Object>> findFollowees(int userId,int offset,int limit){
+        String followeeKey = RedisKeyUtil.getFolloweeKey(userId,ENTITY_TYPE_USER);
+        Set<Integer> ids = redisTemplate.opsForZSet().reverseRange(followeeKey,offset,limit+offset-1);
+        List<Map<String,Object>> list = new ArrayList<>();
+        if(ids!=null){
+            for (int id : ids){
+                Map map = new HashMap<>();
+                map.put("user",userMapper.selectById(id));
+                Double score = redisTemplate.opsForZSet().score(followeeKey, id);
+                map.put("followTime",new Date(score.longValue()));
+                list.add(map);
+            }
+        }
+        return list;
+    }
+
+    //查询某用户的粉丝
+    public List<Map<String,Object>> findFollowers(int userId,int offset,int limit){
+        String followerKey = RedisKeyUtil.getFollowerKey(ENTITY_TYPE_USER,userId);
+        Set<Integer> ids = redisTemplate.opsForZSet().reverseRange(followerKey,offset,limit+offset-1);
+        List<Map<String,Object>> list = new ArrayList<>();
+        if(ids!=null){
+            for (Integer id : ids){
+                Map map = new HashMap<>();
+                map.put("user",userMapper.selectById(id));
+                Double score = redisTemplate.opsForZSet().score(followerKey, id);
+                map.put("followTime",new Date(score.longValue()));
+                list.add(map);
+            }
+        }
+        return list;
+    }
 
 }
