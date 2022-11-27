@@ -33,7 +33,7 @@ public class MessageService {
         return messagemapper.selectLetterCount(conversationId);
     }
 
-    public int findUnreadLetter(int userId,String conversationId){
+    public int findUnreadLetterCount(int userId, String conversationId){
         return messagemapper.selectLetterUnreadCount(userId,conversationId);
     }
 
@@ -48,5 +48,21 @@ public class MessageService {
 
     public int readMessage(List<Integer> ids){
         return messagemapper.updateMessageStatus(ids,1);
+    }
+
+    public Message findLatestNotice(int userId,String topic){
+        return messagemapper.selectLatestNotice(userId,topic);
+    }
+
+    public int findNoticeCount(int userId ,String topic){
+        return messagemapper.selectNoticeCount(userId,topic);
+    }
+
+    public int findUnreadNoticeCount(int userId,String topic){
+        return messagemapper.selectNoticeUnreadCount(userId,topic);
+    }
+
+    public List<Message> findNotices(int userId,String topic,int offset,int limit){
+        return messagemapper.selectNotices(userId,topic,offset,limit);
     }
 }
